@@ -3,6 +3,8 @@
 ## Systems Model
 Thie is a rough model of the architecture the Project is based on. The WebAPI was built using C# 6.0 using ASP.NET Core, Entity Framework Core and MsSQL 2019. The React-application the model described was built in [this repo](https://github.com/kippeves/KYH_Projekt2_React). The MVC-app was never realized in code but was mentioned in the presentation of the project.
 
+
+
 ![SystemModel-Page-2](https://user-images.githubusercontent.com/3217872/170511840-03c23e32-9e78-4baa-9d18-4be6577b3f77.png)
 
 ## The API
