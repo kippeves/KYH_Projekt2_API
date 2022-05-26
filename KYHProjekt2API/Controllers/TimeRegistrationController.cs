@@ -2,8 +2,8 @@ using KYHProjekt2API.Data;
 using KYHProjekt2API.DTO.Customer;
 using KYHProjekt2API.DTO.TimeRegistration;
 using Microsoft.AspNetCore.Mvc;
-using static System.DateTime;
 using ProjectDTO = KYHProjekt2API.DTO.TimeRegistration.ProjectDTO;
+using TimeRegDTO = KYHProjekt2API.DTO.TimeRegistration.TimeRegDTO;
 
 namespace KYHProjekt2API.Controllers;
 
@@ -39,29 +39,6 @@ namespace KYHProjekt2API.Controllers;
                 Description = e.Description,
             }).ToList());
         }
-
-        [Route("customer/{id:int}")]
-        public IActionResult FilterPerCustomer(int id)
-        {
-            var customer = _context.Customers.Find(id);
-            if (customer == null) return NotFound();
-            _context.Entry(customer).Collection((e => e.TimeRegistrations));
-
-            var filteredTimeRegistrations = customer.TimeRegistrations.Select(timeRegistration => new TimeRegDTO()
-            {
-                Id = timeRegistration.Id,
-                Description = timeRegistration.Description,
-                EventStart = timeRegistration.EventStart,
-                EventEnd = timeRegistration.EventEnd,
-                Project = new ProjectDTO()
-                {
-                    Id = timeRegistration.Project.Id,
-                    Name = timeRegistration.Project.Name
-                }
-            }).ToList();
-            
-            return Ok(filteredTimeRegistrations);
-        }
         
         [Route("{id:int}")]
         public IActionResult GetOne(int id)
@@ -90,6 +67,28 @@ namespace KYHProjekt2API.Controllers;
             return Ok(returnItem);
         }
 
+        [Route("customer/{id:int}")]
+        public IActionResult FilterPerCustomer(int id)
+        {
+            var customer = _context.Customers.Find(id);
+            if (customer == null) return NotFound();
+            _context.Entry(customer).Collection((e => e.TimeRegistrations));
+
+            var filteredTimeRegistrations = customer.TimeRegistrations.Select(timeRegistration => new TimeRegDTO()
+            {
+                Id = timeRegistration.Id,
+                Description = timeRegistration.Description,
+                EventStart = timeRegistration.EventStart,
+                EventEnd = timeRegistration.EventEnd,
+                Project = new ProjectDTO()
+                {
+                    Id = timeRegistration.Project.Id,
+                    Name = timeRegistration.Project.Name
+                }
+            }).ToList();
+            
+            return Ok(filteredTimeRegistrations);
+        }
 
         [HttpPut]
         [Route("{id:int}")]
@@ -97,12 +96,32 @@ namespace KYHProjekt2API.Controllers;
         {
             var timereg = _context.TimeRegistrations.Find(id);
             if(timereg== null) return NotFound();
+
+            var errors = new List<string>();
+            var customer = _context.Customers.Find(updateTimeRegDto.CustomerID);
+            var project = _context.Projects.Find(updateTimeRegDto.ProjectID);
+
+            if(customer == null)
+                errors.Add("Kund kunde ej hittas.");
+
+            if(project == null)
+                errors.Add("Projekt kunde ej hittas.");
             
-            timereg.Customer = _context.Customers.Find(updateTimeRegDto.CustomerID);
-            timereg.Project = _context.Projects.Find(updateTimeRegDto.ProjectID);
+            if(!DateTime.TryParse(updateTimeRegDto.EventStart, out var eventStart))
+                errors.Add("Startdaturm är ej rätt formatterat.");
+            
+            if(!DateTime.TryParse(updateTimeRegDto.EventEnd, out var eventEnd))
+                errors.Add("Slutdatum är ej rätt formatterat");
+
+            timereg.Customer = customer;
+            timereg.Project = project;
+
+            if (errors.Any())
+                return BadRequest(errors);
+            
             timereg.Description = updateTimeRegDto.Description;
-            timereg.EventStart = updateTimeRegDto.EventStart;
-            timereg.EventEnd = updateTimeRegDto.EventEnd;
+            timereg.EventStart = eventStart;
+            timereg.EventEnd = eventEnd;
             _context.SaveChanges();
 
             return NoContent();
@@ -111,14 +130,56 @@ namespace KYHProjekt2API.Controllers;
         [HttpPost]
         public IActionResult Skapa(CreateTimeRegDTO timereg)
         {
+            var errors = new List<string>();
+            
+            var customer = _context.Customers.Find(timereg.CustomerID);
+            var project = _context.Projects.Find(timereg.ProjectID);
+
+            if (customer == null)
+            {
+                errors.Add("Kund kunde ej hittas.");
+            }
+
+            if(project == null)
+                errors.Add("Projekt kunde ej hittas.");
+
+            var start = DateTime.TryParse(timereg.EventStart, out var eventStart);
+            var end = DateTime.TryParse(timereg.EventEnd, out var eventEnd);
+            
+            if (start && end) {
+                if (eventStart > eventEnd)
+                {
+                    errors.Add("Slutdatum kan inte ligga före startdatum");
+                }
+            }
+            
+            if(!start)
+                errors.Add("Startdaturm är ej rätt formatterat.");
+            if(!end)
+                errors.Add("Slutdatum är ej rätt formatterat");
+            
+            if(customer != null)
+                if (project != null)
+                {
+                    _context.Entry(customer).Collection(e => e.Projects).Load();
+                    if (!customer.Projects.Contains(project))
+                    {
+                        errors.Add("Projekt tillhör inte den valda kunden");
+                    }
+                }
+
+            if(errors.Any())
+                return BadRequest(errors);
+            
             var inputTimeReg = new TimeRegistration()
             {
-                Customer = _context.Customers.Find(timereg.CustomerID),
-                Project = _context.Projects.Find(timereg.ProjectID),
+                Customer = customer,
+                Project = project,
                 Description = timereg.Description,
-                EventStart = Parse(timereg.EventStart),
-                EventEnd = Parse(timereg.EventEnd)
+                EventStart = eventStart,
+                EventEnd = eventEnd
             };
+            
             _context.TimeRegistrations.Add(inputTimeReg);
             _context.SaveChanges();
 
@@ -140,5 +201,16 @@ namespace KYHProjekt2API.Controllers;
                 EventEnd = inputTimeReg.EventEnd
             };
             return CreatedAtAction(nameof(GetOne), new {id = inputTimeReg.Id}, createdTimeReg);
+        }
+        
+        [HttpDelete]
+        [Route("{id:int}")]
+        public IActionResult Delete(int id)
+        {
+            var registration = _context.TimeRegistrations.Find(id);
+            if (registration == null) return NotFound("Registrering kunde inte hittas");
+            registration.IsActive = false;
+            _context.SaveChanges();
+            return Ok();
         }
     }

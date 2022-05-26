@@ -12,8 +12,8 @@
     "KYHProjekt2API": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "launchUrl": "project",
+      "launchBrowser": false,
+      "launchUrl": "projects",
       "applicationUrl": "https://localhost:7248;http://localhost:5018",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

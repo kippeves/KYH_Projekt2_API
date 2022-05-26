@@ -4,8 +4,8 @@ namespace KYHProjekt2API.DTO.Project;
 
 public class CreateProjectDTO
 {
-    [Required(ErrorMessage = "Du glömde skriva in ett namn")]
+    [Required(ErrorMessage = "Projektet behöver ett namn")]
     public string? Name { get; set; }
-    [Required(ErrorMessage = "Projektet behöver en ägande.")]
+    [Required(ErrorMessage = "Projektet behöver en ägare.")]
     public int? CustomerId { get; set; }
 }

@@ -4,6 +4,6 @@ namespace KYHProjekt2API.DTO.Customer;
 
 public class CreateCustomerDTO
 {
-    [Required(ErrorMessage = "Du glömde skicka in ett namn")]
+    [Required(ErrorMessage = "Kunden behöver ett namn")]
     public string? Name { get; set; }
 }

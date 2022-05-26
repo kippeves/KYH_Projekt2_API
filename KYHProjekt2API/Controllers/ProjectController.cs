@@ -4,10 +4,11 @@ using KYHProjekt2API.DTO.Project;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectDTO = KYHProjekt2API.DTO.Project.ProjectDTO;
+using TimeRegDTO = KYHProjekt2API.DTO.Project.TimeRegDTO;
 
 namespace KYHProjekt2API.Controllers;
 
-    [Route("project")]
+    [Route("projects")]
     [ApiController]
     public class ProjectController : ControllerBase
     {
@@ -17,11 +18,13 @@ namespace KYHProjekt2API.Controllers;
         {
             _context = context;
         }
-
-        [HttpGet]
+        
         public IActionResult Index()
         {
-            return Ok(_context.Projects.Include(e=>e.TimeRegistrations).Select(e => new ProjectDTO()
+            return Ok(_context.Projects
+                .Include(e=>e.TimeRegistrations)
+                .Where(e=>e.IsActive == true)
+                .Select(e => new ProjectDTO()
             {
                 Id = e.Id,
                 Name = e.Name,
@@ -44,8 +47,10 @@ namespace KYHProjekt2API.Controllers;
         public IActionResult GetOne(int id)
         {
             var project = _context.Projects.Find(id);
-            if (project == null) return NoContent();
-            _context.Entry(project).Reference(e=>e.Customer).Load();
+            
+            if (project == null) return NotFound("Projekt kunde inte hittas.");
+            if (!project.IsActive) return NotFound("Project kunde inte hittas");
+            
             var returnItem = new ProjectDTO()
             {
                 Id = project.Id,
@@ -63,7 +68,10 @@ namespace KYHProjekt2API.Controllers;
         public IActionResult GetTimeRegForProject(int id)
         {
             var project = _context.Projects.Find(id);
-            if (project == null) return NotFound();
+            
+            if (project == null) return NotFound("Projekt kunde inte hittas.");
+            if (!project.IsActive) return NotFound("Project kunde inte hittas");
+            
             _context.Entry(project).Collection(e => e.TimeRegistrations).Load();
 
             var filteredTimeRegList = project.TimeRegistrations.Select((timereg) => new TimeRegDTO(){
@@ -81,10 +89,17 @@ namespace KYHProjekt2API.Controllers;
         public IActionResult Uppdatera(int id, UpdateProjectDTO inputProject)
         {
             var project = _context.Projects.Find(id);
+            if (project == null) return NotFound("Projekt kunde inte hittas.");
+            if (!project.IsActive) return NotFound("Project kunde inte hittas");
+            
             var customer = _context.Customers.Find(inputProject.CustomerId);
-            if ((project == null) || (customer == null)) return NotFound();
+            if(customer == null) return BadRequest("Kunden kunde inte hittas");
+            if (!customer.IsActive) return BadRequest("Kunde kunde inte hittas");
+            
+            _context.Entry(project).Reference(e=>e.Customer).Load();
             project.Name = inputProject.Name;
             project.Customer = customer;
+            
             _context.SaveChanges();
             return NoContent();
         }
@@ -94,10 +109,8 @@ namespace KYHProjekt2API.Controllers;
         public IActionResult Skapa(CreateProjectDTO project)
         {
             var customer = _context.Customers.Find(project.CustomerId);
-            if (customer == null)
-            {
-                return NoContent();
-            }
+            if(customer == null) return BadRequest("Kund kunde inte hittas");
+            if (!customer.IsActive) return BadRequest("Kund kunde inte hittas.");
             _context.Entry(customer).Collection(e=>e.Projects).Load();
             var newProject = new Project()
             {
@@ -117,6 +130,20 @@ namespace KYHProjekt2API.Controllers;
                     Name = newProject.Customer.Name
                 }
             };
+            
             return CreatedAtAction(nameof(GetOne), new {id = newProject.Id}, madeProject);
+        }
+
+        [HttpDelete]
+        [Route("{id:int}")]
+        public IActionResult Delete(int id)
+        {
+            var project = _context.Projects.Find(id);
+            if (project == null) return NotFound("Projekt kunde inte hittas");
+            _context.Entry(project).Collection(e=>e.TimeRegistrations).Load();
+            project.IsActive = false;
+            project.TimeRegistrations.ForEach(e=>e.IsActive = false);
+            _context.SaveChanges();
+            return Ok();
         }
     }

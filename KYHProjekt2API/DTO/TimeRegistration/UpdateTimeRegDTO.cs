@@ -9,8 +9,8 @@ public class UpdateTimeRegDTO
     [Required(ErrorMessage = "Ett projekt krävs")]
     public int ProjectID { get; set; }
     [Required(ErrorMessage = "Det krävs en starttid")]
-    public DateTime? EventStart { get; set; }
+    public string EventStart { get; set; }
     [Required(ErrorMessage = "Det krävs en sluttid")]
-    public DateTime? EventEnd { get; set; }
+    public string EventEnd { get; set; }
     public string Description { get; set; }   
 }
