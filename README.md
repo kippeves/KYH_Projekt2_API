@@ -15,3 +15,7 @@ It defaults to only showing information about the bare entity, not the projects 
 
 ### /Projects
 This endpoints show the projects used in the system. It defaults to showing all the timeregistrations connected to the project as well as customer/owner. 
+It is possible to get timeregistrations for a singular project using /projects/[ProjectID]/timereg. It is currently used for the React-project but it is  redundant as it's included in the index-method.
+
+### /Timereg
+This endpoint shows timeregistrations in the system. It's possible to filter timeregistrations per customer by using /customer/[CustomerID].
