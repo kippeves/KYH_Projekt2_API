@@ -1,4 +1,17 @@
 # KYH Projekt2 API
-This 
 
-##
+## Systems Model
+Thie is a rough model of the architecture the Project is based on. The WebAPI was built using C# 6.0 using ASP.NET Core, Entity Framework Core and MsSQL 2019. The React-application the model described was built in [this repo](https://github.com/kippeves/KYH_Projekt2_React). The MVC-app was never realized in code but was mentioned in the presentation of the project.
+
+![SystemModel-Page-2](https://user-images.githubusercontent.com/3217872/170511840-03c23e32-9e78-4baa-9d18-4be6577b3f77.png)
+
+## The API
+
+The api has three endpoints: 1. __/customers__ 2 .__/projects__ and 3. __/timereg__.
+
+### /Customers
+
+It defaults to only showing information about the bare entity, not the projects or timeregistrations connected to it. Projects connected to a customer can be shown using _/customers/[CustomerID]/projects_ and will contain the timeregistrations connected to it for ease of use if you want to show it in a eventlist, per example. 
+
+### /Projects
+This endpoints show the projects used in the system. It defaults to showing all the timeregistrations connected to the project as well as customer/owner. 
