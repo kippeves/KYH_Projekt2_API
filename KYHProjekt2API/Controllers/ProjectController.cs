@@ -53,7 +53,8 @@ public class ProjectController : ControllerBase
         if (project == null) return NotFound(notFoundMessage);
         if (!project.IsActive) return NotFound(notFoundMessage);
         _context.Entry(project).Reference(e => e.Customer).Load();
-
+        _context.Entry(project).Collection(e=> e.TimeRegistrations).Load();
+        
         var returnItem = new ProjectDTO
         {
             Id = project.Id,
@@ -62,7 +63,15 @@ public class ProjectController : ControllerBase
             {
                 Id = project.Customer.Id,
                 Name = project.Customer.Name
-            }
+            },
+            Registrations = project.TimeRegistrations.Select(reg =>
+                new TimeRegDTO
+                {
+                    Id = reg.Id,
+                    Description = reg.Description,
+                    EventStart = reg.EventStart,
+                    EventEnd = reg.EventEnd
+                }).ToList()
         };
         return Ok(returnItem);
     }
