@@ -3,6 +3,7 @@
 ## The API
 
 The api has three endpoints: 1. __/customers__ 2 .__/projects__ and 3. __/timereg__.
+__Note: Deletes for all entities are non-volatile, and are read as a bool called IsActive in either entity. Methods read the bool to consider if the entity asked for is considered "deleted" or not. I have not implmemented a "un-delete" function.
 
 ### /Customers
 
