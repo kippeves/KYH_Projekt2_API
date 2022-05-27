@@ -13,6 +13,8 @@ namespace KYHProjekt2API.Controllers;
 public class ProjectController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private string notFoundMessage = "Projekt kunde inte hittas";
+    private string customerNotFound = "Kund kunde inte hittas";
 
     public ProjectController(ApplicationDbContext context)
     {
@@ -48,8 +50,8 @@ public class ProjectController : ControllerBase
     public IActionResult GetOne(int id)
     {
         var project = _context.Projects.Find(id);
-        if (project == null) return NotFound("Projekt kunde inte hittas.");
-        if (!project.IsActive) return NotFound("Project kunde inte hittas");
+        if (project == null) return NotFound(notFoundMessage);
+        if (!project.IsActive) return NotFound(notFoundMessage);
         _context.Entry(project).Reference(e => e.Customer).Load();
 
         var returnItem = new ProjectDTO
@@ -70,8 +72,8 @@ public class ProjectController : ControllerBase
     {
         var project = _context.Projects.Find(id);
 
-        if (project == null) return NotFound("Projekt kunde inte hittas.");
-        if (!project.IsActive) return NotFound("Project kunde inte hittas");
+        if (project == null) return NotFound(notFoundMessage);
+        if (!project.IsActive) return NotFound(notFoundMessage);
 
         _context.Entry(project).Collection(e => e.TimeRegistrations).Load();
 
@@ -91,12 +93,12 @@ public class ProjectController : ControllerBase
     public IActionResult Uppdatera(int id, UpdateProjectDTO inputProject)
     {
         var project = _context.Projects.Find(id);
-        if (project == null) return NotFound("Projekt kunde inte hittas.");
-        if (!project.IsActive) return NotFound("Project kunde inte hittas");
+        if (project == null) return NotFound(notFoundMessage);
+        if (!project.IsActive) return NotFound(notFoundMessage);
 
         var customer = _context.Customers.Find(inputProject.CustomerId);
-        if (customer == null) return BadRequest("Kunden kunde inte hittas");
-        if (!customer.IsActive) return BadRequest("Kunde kunde inte hittas");
+        if (customer == null) return BadRequest(customerNotFound);
+        if (!customer.IsActive) return BadRequest(customerNotFound);
 
         _context.Entry(project).Reference(e => e.Customer).Load();
 
@@ -113,14 +115,15 @@ public class ProjectController : ControllerBase
     {
         var customer = _context.Customers.Find(project.CustomerId);
 
-        if (customer == null) return BadRequest("Kund kunde inte hittas");
-        if (!customer.IsActive) return BadRequest("Kund kunde inte hittas.");
+        if (customer == null) return BadRequest(customerNotFound);
+        if (!customer.IsActive) return BadRequest(customerNotFound);
 
         _context.Entry(customer).Collection(e => e.Projects).Load();
 
         var newProject = new Project
         {
-            Name = project.Name
+            Name = project.Name,
+            IsActive = true
         };
 
         customer.Projects.Add(newProject);
@@ -145,7 +148,7 @@ public class ProjectController : ControllerBase
     public IActionResult Delete(int id)
     {
         var project = _context.Projects.Find(id);
-        if (project == null) return NotFound("Projekt kunde inte hittas");
+        if (project == null) return NotFound(notFoundMessage);
 
         _context.Entry(project).Collection(e => e.TimeRegistrations).Load();
 

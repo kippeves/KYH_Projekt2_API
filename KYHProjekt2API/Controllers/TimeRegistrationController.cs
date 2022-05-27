@@ -12,7 +12,8 @@ namespace KYHProjekt2API.Controllers;
 public class TimeRegistrationController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-
+    private string regNotFoundError = "Tidsregistrering kunde inte hittas.";
+    private string customerNotFoundError = "Kund kunde inte hittas";
     public TimeRegistrationController(ApplicationDbContext context)
     {
         _context = context;
@@ -21,7 +22,9 @@ public class TimeRegistrationController : ControllerBase
     [HttpGet]
     public IActionResult Index()
     {
-        return Ok(_context.TimeRegistrations.Select(e => new TimeRegDTO
+        return Ok(_context.TimeRegistrations
+            .Where(e=>e.IsActive == true)
+            .Select(e => new TimeRegDTO
         {
             Id = e.Id,
             Customer = new CustomerDTO
@@ -44,7 +47,8 @@ public class TimeRegistrationController : ControllerBase
     public IActionResult GetOne(int id)
     {
         var timereg = _context.TimeRegistrations.Find(id);
-        if (timereg == null) return NotFound();
+        if (timereg == null) return NotFound(regNotFoundError);
+        if (!timereg.IsActive) return NotFound(regNotFoundError);
 
         var returnItem = new TimeRegDTO
         {
@@ -71,10 +75,14 @@ public class TimeRegistrationController : ControllerBase
     public IActionResult FilterPerCustomer(int id)
     {
         var customer = _context.Customers.Find(id);
-        if (customer == null) return NotFound();
+        if (customer == null) return NotFound(customerNotFoundError);
+        if (!customer.IsActive) return NotFound(customerNotFoundError);
+
         _context.Entry(customer).Collection(e => e.TimeRegistrations);
 
-        var filteredTimeRegistrations = customer.TimeRegistrations.Select(timeRegistration => new TimeRegDTO
+        var filteredTimeRegistrations = customer.TimeRegistrations
+            .Where(e=>e.IsActive == true)
+            .Select(timeRegistration => new TimeRegDTO
         {
             Id = timeRegistration.Id,
             Description = timeRegistration.Description,
@@ -95,7 +103,8 @@ public class TimeRegistrationController : ControllerBase
     public IActionResult Uppdatera(int id, UpdateTimeRegDTO updateTimeRegDto)
     {
         var timereg = _context.TimeRegistrations.Find(id);
-        if (timereg == null) return NotFound();
+        if (timereg == null) return NotFound(regNotFoundError);
+        if (!timereg.IsActive) return NotFound(regNotFoundError);
 
         var errors = new List<string>();
 
@@ -177,7 +186,8 @@ public class TimeRegistrationController : ControllerBase
             Project = project,
             Description = timereg.Description,
             EventStart = eventStart,
-            EventEnd = eventEnd
+            EventEnd = eventEnd,
+            IsActive = true
         };
 
         _context.TimeRegistrations.Add(inputTimeReg);
@@ -208,7 +218,7 @@ public class TimeRegistrationController : ControllerBase
     public IActionResult Delete(int id)
     {
         var registration = _context.TimeRegistrations.Find(id);
-        if (registration == null) return NotFound("Registrering kunde inte hittas");
+        if (registration == null) return NotFound(regNotFoundError);
         registration.IsActive = false;
         _context.SaveChanges();
         return Ok();

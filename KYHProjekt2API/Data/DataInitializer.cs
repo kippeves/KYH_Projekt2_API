@@ -14,24 +14,26 @@ public class DataInitializer
     public void SeedData()
     {
         _context.Database.Migrate();
-//        SeedCustomers();
+        SeedCustomers();
     }
 
     private void SeedCustomers()
     {
         var date = DateTime.Now;
-        if (_context.Customers.Find(1) == null)
+        if (!_context.Customers.Any(e => e.Name == "IntelliCode Inc."))
         {
             var cust = new Customer
             {
                 Name = "IntelliCode Inc.",
                 Projects = new List<Project>(),
-                TimeRegistrations = new List<TimeRegistration>()
+                TimeRegistrations = new List<TimeRegistration>(),
+                IsActive = true
             };
 
             var proj = new Project
             {
-                Name = "Ny hemsida till företaget"
+                Name = "Ny hemsida till företaget",
+                IsActive = true
             };
 
             var reg = new TimeRegistration
@@ -40,7 +42,8 @@ public class DataInitializer
                 Project = proj,
                 EventStart = date.AddYears(-2),
                 EventEnd = date.AddYears(-2).AddHours(4),
-                Description = "Första möte med kunden, alla var glada."
+                Description = "Första möte med kunden, alla var glada.",
+                IsActive = true
             };
 
             cust.Projects.Add(proj);
@@ -48,18 +51,20 @@ public class DataInitializer
             _context.Customers.Add(cust);
         }
 
-        if (_context.Customers.Find(1) == null)
+        if (!_context.Customers.Any(e=>e.Name == "Stockholm MegaHackers"))
         {
             var cust = new Customer
             {
                 Name = "Stockholm MegaHackers",
                 Projects = new List<Project>(),
-                TimeRegistrations = new List<TimeRegistration>()
+                TimeRegistrations = new List<TimeRegistration>(),
+                IsActive = true
             };
 
             var proj = new Project
             {
-                Name = "Fixade ny Email-tjänst"
+                Name = "Fixade ny Email-tjänst",
+                IsActive = true
             };
 
             var reg = new TimeRegistration
@@ -68,7 +73,8 @@ public class DataInitializer
                 Project = proj,
                 EventStart = date.AddYears(-2),
                 EventEnd = date.AddYears(-2).AddHours(4),
-                Description = "Det ser ut att bli ett bra samarbete."
+                Description = "Det ser ut att bli ett bra samarbete.",
+                IsActive = true
             };
 
             cust.Projects.Add(proj);

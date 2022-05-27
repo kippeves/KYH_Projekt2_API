@@ -10,7 +10,8 @@ namespace KYHProjekt2API.Controllers;
 public class CustomerController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-
+    private string notFoundMessage = "Kund kunde inte hittas.";
+    
     public CustomerController(ApplicationDbContext context)
     {
         _context = context;
@@ -29,8 +30,8 @@ public class CustomerController : ControllerBase
     public IActionResult GetOne(int id)
     {
         var customer = _context.Customers.Find(id);
-        if (customer == null) return NotFound("Kund kunde inte hittas.");
-        if (!customer.IsActive) return NotFound("Kund kunde inte hittas");
+        if (customer == null) return NotFound(notFoundMessage);
+        if (!customer.IsActive) return NotFound(notFoundMessage);
 
         var returnItem = new CustomerDTO
         {
@@ -45,8 +46,8 @@ public class CustomerController : ControllerBase
     public IActionResult GetRegistrationsForCustomer(int id)
     {
         var customer = _context.Customers.Find(id);
-        if (customer == null) return NotFound("Kund kunde inte hittas");
-        if (!customer.IsActive) return NotFound("Kund kunde inte hittas");
+        if (customer == null) return NotFound(notFoundMessage);
+        if (!customer.IsActive) return NotFound(notFoundMessage);
 
         _context.Entry(customer)
             .Collection(e => e.Projects)
@@ -78,8 +79,8 @@ public class CustomerController : ControllerBase
     public IActionResult Uppdatera(int id, UpdateCustomerDTO inputCustomer)
     {
         var customer = _context.Customers.Find(id);
-        if (customer == null) return NotFound("Kund kunde inte hittas.");
-        if (!customer.IsActive) return NotFound("Kund kunde inte hittas");
+        if (customer == null) return NotFound(notFoundMessage);
+        if (!customer.IsActive) return NotFound(notFoundMessage);
 
         customer.Name = inputCustomer.Name;
         _context.SaveChanges();
@@ -93,7 +94,8 @@ public class CustomerController : ControllerBase
     {
         var createCustomer = new Customer
         {
-            Name = customer.Name
+            Name = customer.Name,
+            IsActive = true
         };
         _context.Customers.Add(createCustomer);
         _context.SaveChanges();
@@ -111,7 +113,7 @@ public class CustomerController : ControllerBase
     public IActionResult Delete(int id)
     {
         var customer = _context.Customers.Find(id);
-        if (customer == null) return BadRequest("Kund kunde inte hittas.");
+        if (customer == null) return BadRequest(notFoundMessage);
 
         _context.Entry(customer).Collection(e => e.Projects).Load();
         _context.Entry(customer).Collection(e => e.Projects)
